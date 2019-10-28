@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 String version = "1.0.0";
 
 
-void main() => runApp(MyApp());
+var location = new Location();
+
+
+void main() {
+  runApp(MyApp());
+}
 
 // Main app class
 class MyApp extends StatelessWidget {
@@ -12,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Simple App',
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -77,8 +83,14 @@ class MapTabState extends State<MapTab> {
         Align(
           alignment: Alignment.bottomCenter,
           child: RaisedButton(
-            onPressed: () {
-              print("pressed");
+            onPressed: () async {
+
+              LocationData currentLocation = await location.getLocation();
+
+              var lat = currentLocation.latitude;
+              var long = currentLocation.longitude;
+
+              print("lat = $lat, long = $long");
             },
             elevation: 5,
             shape: RoundedRectangleBorder(
