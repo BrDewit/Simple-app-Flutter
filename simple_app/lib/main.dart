@@ -70,8 +70,13 @@ class MapTabState extends State<MapTab> {
       target: LatLng(-33.852, 151.211),
       zoom: 11.0,
     ),
-    onMapCreated: (GoogleMapController controller) {
+    onMapCreated: (GoogleMapController controller) async {
       _mapController = controller;
+      LocationData currentLocation = await location.getLocation();
+
+      var lat = currentLocation.latitude;
+      var long = currentLocation.longitude;
+      controller.moveCamera(CameraUpdate.newLatLng(LatLng(lat, long)));
     },
   );
 
