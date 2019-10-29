@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
-String version = "1.0.0";
+String version = "0.1.0";
 
 
 var location = new Location();
@@ -105,11 +105,9 @@ class MapTabState extends State<MapTab> {
               ),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
-              "Start Recording",
-              style: TextStyle(color: Colors.white),
-            ),
             color: Colors.blue,
+            textColor: Colors.white,
+            child: Text("Start Recording"),
           ),
         ),
       ],
