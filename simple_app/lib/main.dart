@@ -4,9 +4,7 @@ import 'package:location/location.dart';
 
 String version = "0.1.0";
 
-
 var location = new Location();
-
 
 void main() {
   runApp(MyApp());
@@ -62,40 +60,55 @@ class MapTab extends StatefulWidget {
 
 class MapTabState extends State<MapTab> {
   static GoogleMapController _mapController;
-
-  final GoogleMap googleMap = GoogleMap(
-    mapType: MapType.normal,
-    myLocationEnabled: true,
-    initialCameraPosition: CameraPosition(
-      target: LatLng(-33.852, 151.211),
-      zoom: 11.0,
-    ),
-    onMapCreated: (GoogleMapController controller) async {
-      _mapController = controller;
-      LocationData currentLocation = await location.getLocation();
-
-      var lat = currentLocation.latitude;
-      var long = currentLocation.longitude;
-      controller.moveCamera(CameraUpdate.newLatLng(LatLng(lat, long)));
-    },
-  );
+  Set<Polyline> _polylines = Set();
+  int lineId = 0;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        googleMap,
+        GoogleMap(
+          mapType: MapType.normal,
+          myLocationEnabled: true,
+          initialCameraPosition: CameraPosition(
+            target: LatLng(-33.852, 151.211),
+            zoom: 15.0,
+          ),
+          onMapCreated: (GoogleMapController controller) async {
+            _mapController = controller;
+            LocationData currentLocation = await location.getLocation();
+
+            var lat = currentLocation.latitude;
+            var long = currentLocation.longitude;
+
+            _mapController
+                .moveCamera(CameraUpdate.newLatLng(LatLng(lat, long)));
+          },
+          polylines: _polylines,
+        ),
         Align(
           alignment: Alignment.bottomCenter,
           child: RaisedButton(
             onPressed: () async {
-
               LocationData currentLocation = await location.getLocation();
 
               var lat = currentLocation.latitude;
-              var long = currentLocation.longitude;
+              var lng = currentLocation.longitude;
+              var points = <LatLng>[LatLng(lat, lng)];
 
-              print("lat = $lat, long = $long");
+              setState(() {
+                _polylines.add(
+                    Polyline(
+                      polylineId: PolylineId("$lineId"),
+                      visible: true,
+                      color: Colors.red,
+                      width: 4,
+                      points: points,
+                    )
+                );
+              });
+
+              lineId++;
             },
             elevation: 5,
             shape: RoundedRectangleBorder(
@@ -121,7 +134,6 @@ class DataTab extends StatefulWidget {
 }
 
 class DataTabState extends State<DataTab> {
-
   @override
   Widget build(BuildContext context) {
     return ListView(
