@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -12,7 +14,6 @@ void main() async {
   version = packageInfo.version;
   runApp(MyApp());
 }
-
 
 // App widget, the root of the widget tree, is a MaterialApp
 class MyApp extends StatelessWidget {
@@ -41,8 +42,10 @@ class MyTabView extends StatelessWidget {
     return DefaultTabController(
       length: myTabs.length,
       child: Scaffold(
-        appBar: PreferredSize( //PreferredSize widget allows to change the size of the child widget
-          preferredSize: Size.fromHeight(48), //height is just enough for the 2 tabs
+        appBar: PreferredSize(
+          //PreferredSize widget allows to change the size of the child widget
+          preferredSize:
+              Size.fromHeight(48), //height is just enough for the 2 tabs
           child: AppBar(
             bottom: TabBar(
               tabs: myTabs,
@@ -65,11 +68,64 @@ class MapTab extends StatefulWidget {
 }
 
 class MapTabState extends State<MapTab> {
-  static GoogleMapController _mapController;
-  var location = new Location();
+  GoogleMapController _mapController;
+
+  // The polylines are the routes the user has taken
   Set<Polyline> _polylines = Set();
   int _lineId = 0;
+  // the polyline of the current route
+  Polyline route;
 
+  // A timer that, when started, records the route of the user and draws it on the map
+  final tickdelay = Duration(seconds: 1);
+  Timer _recordCycle;
+
+  //
+  bool isRecording = false;
+  // starts/stops the process of drawing the route of the user
+  void _recordButtonPressed() {
+    if(isRecording) {
+      _recordCycle.cancel();
+      setState(() {
+        isRecording = false;
+      });
+    } else {
+      var positions = List<LatLng>();
+
+      // Add a new polyline to the map
+      // This will draw the route of the user
+      route = Polyline(
+        polylineId: PolylineId("$_lineId"),
+        visible: true,
+        color: Colors.red,
+        width: 4,
+        points: positions,
+      );
+      _polylines.add(route);
+
+      _lineId++;
+
+      _recordCycle = Timer.periodic(tickdelay, (Timer timer) async {
+        // a location object to be able to access the user location
+        Location location = new Location();
+        LocationData currentLocation = await location.getLocation();
+
+        var lat = currentLocation.latitude;
+        var lng = currentLocation.longitude;
+
+        // add the current location to the points of the polyline
+        setState(() {
+          route.points.add(LatLng(lat, lng));
+        });
+      });
+
+      setState(() {
+        isRecording = true;
+      });
+    }
+  }
+
+  // build function that builds the UI of the widget
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -84,7 +140,7 @@ class MapTabState extends State<MapTab> {
           onMapCreated: (GoogleMapController controller) async {
             _mapController = controller;
             // get the current location of the user
-            LocationData currentLocation = await location.getLocation();
+            LocationData currentLocation = await Location().getLocation();
 
             var lat = currentLocation.latitude;
             var long = currentLocation.longitude;
@@ -97,31 +153,12 @@ class MapTabState extends State<MapTab> {
         ),
         Align(
           alignment: Alignment.bottomCenter,
+          // The button on the map tab that starts the recording of the route
           child: RaisedButton(
             // callback function, called after a the button is pressed
-            onPressed: () async {
-              LocationData currentLocation = await location.getLocation();
+            onPressed: _recordButtonPressed,
 
-              var lat = currentLocation.latitude;
-              var lng = currentLocation.longitude;
-              var positions = <LatLng>[LatLng(lat, lng)];
-
-              setState(() {
-                _polylines.add(
-                    Polyline(
-                      polylineId: PolylineId("$_lineId"),
-                      visible: true,
-                      color: Colors.red,
-                      width: 4,
-                      points: positions,
-                    )
-                );
-              });
-
-              _lineId++;
-            },
-
-            // Look of the button
+            // Properties that change the look of the button
             elevation: 5,
             shape: RoundedRectangleBorder(
               side: BorderSide(
@@ -138,8 +175,15 @@ class MapTabState extends State<MapTab> {
       ],
     );
   }
+
+  @override
+  void dispose() {
+    _recordCycle.cancel();
+    super.dispose();
+  }
 }
 
+// The body of the data tab
 class DataTab extends StatefulWidget {
   @override
   DataTabState createState() => DataTabState();
@@ -148,6 +192,7 @@ class DataTab extends StatefulWidget {
 class DataTabState extends State<DataTab> {
   @override
   Widget build(BuildContext context) {
+    // a scrollable list
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: <Widget>[
