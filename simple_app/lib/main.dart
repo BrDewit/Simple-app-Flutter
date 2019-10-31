@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:package_info/package_info.dart';
 
-String version = "0.1.0";
+// Version number of the app
+String version;
 
-var location = new Location();
-
-void main() {
+// main gets called when the app opens
+void main() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  version = packageInfo.version;
   runApp(MyApp());
 }
 
-// Main app class
+
+// App widget, the root of the widget tree, is a MaterialApp
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -25,6 +29,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Creates a Scaffold with 2 tabs
 class MyTabView extends StatelessWidget {
   final List<Tab> myTabs = <Tab>[
     Tab(icon: Icon(Icons.map)),
@@ -36,8 +41,8 @@ class MyTabView extends StatelessWidget {
     return DefaultTabController(
       length: myTabs.length,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(48),
+        appBar: PreferredSize( //PreferredSize widget allows to change the size of the child widget
+          preferredSize: Size.fromHeight(48), //height is just enough for the 2 tabs
           child: AppBar(
             bottom: TabBar(
               tabs: myTabs,
@@ -53,6 +58,7 @@ class MyTabView extends StatelessWidget {
   }
 }
 
+// The body of the tab with the GoogleMap
 class MapTab extends StatefulWidget {
   @override
   MapTabState createState() => MapTabState();
@@ -60,8 +66,9 @@ class MapTab extends StatefulWidget {
 
 class MapTabState extends State<MapTab> {
   static GoogleMapController _mapController;
+  var location = new Location();
   Set<Polyline> _polylines = Set();
-  int lineId = 0;
+  int _lineId = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +83,13 @@ class MapTabState extends State<MapTab> {
           ),
           onMapCreated: (GoogleMapController controller) async {
             _mapController = controller;
+            // get the current location of the user
             LocationData currentLocation = await location.getLocation();
 
             var lat = currentLocation.latitude;
             var long = currentLocation.longitude;
 
+            // move the camera to the position of the user
             _mapController
                 .moveCamera(CameraUpdate.newLatLng(LatLng(lat, long)));
           },
@@ -89,27 +98,30 @@ class MapTabState extends State<MapTab> {
         Align(
           alignment: Alignment.bottomCenter,
           child: RaisedButton(
+            // callback function, called after a the button is pressed
             onPressed: () async {
               LocationData currentLocation = await location.getLocation();
 
               var lat = currentLocation.latitude;
               var lng = currentLocation.longitude;
-              var points = <LatLng>[LatLng(lat, lng)];
+              var positions = <LatLng>[LatLng(lat, lng)];
 
               setState(() {
                 _polylines.add(
                     Polyline(
-                      polylineId: PolylineId("$lineId"),
+                      polylineId: PolylineId("$_lineId"),
                       visible: true,
                       color: Colors.red,
                       width: 4,
-                      points: points,
+                      points: positions,
                     )
                 );
               });
 
-              lineId++;
+              _lineId++;
             },
+
+            // Look of the button
             elevation: 5,
             shape: RoundedRectangleBorder(
               side: BorderSide(
@@ -142,9 +154,7 @@ class DataTabState extends State<DataTab> {
         Text("Version $version"),
         Divider(),
         Text("This is an app to test Flutter's ease of use."),
-        Text(""),
-        Text(""),
-        Text(""),
+        Text("\n \n \n"),
         Text("Made by Bram Dewit")
       ],
     );

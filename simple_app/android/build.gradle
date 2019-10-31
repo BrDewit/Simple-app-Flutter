@@ -11,6 +11,10 @@ buildscript {
     }
 }
 
+defaultConfig {
+    versionName "0.1.0"
+}
+
 allprojects {
     repositories {
         google()
