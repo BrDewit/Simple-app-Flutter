@@ -6,6 +6,8 @@ import 'package:location/location.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 
+// TODO order the app into multiple files
+
 // Version number of the app
 String version;
 
